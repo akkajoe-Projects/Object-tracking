@@ -4,6 +4,7 @@ import sys
 from imutils.video import FPS
 import psutil
 import threading
+from flask import Flask,render_template,Response
 
 # dict containing different Tracker types
 OPENCV_OBJECT_TRACKERS={
@@ -19,60 +20,83 @@ OPENCV_OBJECT_TRACKERS={
 
 print(OPENCV_OBJECT_TRACKERS.keys())
 print("For GOTURN you are required to download GOTURN model files")
-tracker_inp=input("Which tracker would you like to use? ")
+tracker_inp=input("Which tracker would you like to use? ")    
 
 multiTracker=cv2.legacy.MultiTracker_create()
-
-#inititalize
 bboxes=[]
-k=cv2.waitKey(1) & 0xFF
 tracker_objects=[]
-fps=FPS().start()
+# fps=FPS().start()
 
-video_stream=cv2.VideoCapture(0)
+app = Flask(__name__,template_folder='templates')
 
-while True:
-	ret,frame=video_stream.read()
-	#resize the frame to process it faster
-	frame=imutils.resize(frame,width=450)
-	frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+@app.route('/')
+def index():
+	return render_template('video.html')
+
+'''
+gen_frames() enters a loop which continuously returns frames as response chunks
+'''
+def gen_frames():
+	video_stream=cv2.VideoCapture(0)
+	while True:
+		ret,frame=video_stream.read()
+		if ret==False:
+			print("ERROR")
+			sys.exit()
+		#resize the frame to process it faster
+		# frame=imutils.resize(frame,width=450)
+		# frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+
+		# Bounding Boxes are created on pressing "s"
+		if cv2.waitKey(1) & 0xFF==ord("s"):
+			while True:		
+				bbox=cv2.selectROI("MultiTracker",frame,fromCenter=False,
+				showCrosshair=False)
+				tracker=OPENCV_OBJECT_TRACKERS[tracker_inp]()
+				tracker_objects.append(tracker)
+				bboxes.append(bbox)
+				print("bboxes"+str(bboxes))
+				print("Press q to quit selecting boxes and start tracking.")
+				#if cv2.waitKey(1) & 0xFF==ord("b")
+				if cv2.waitKey(0) & 0xFF==ord("q"):
+					print("INSIDE IF CONDITION")
+					break
+
+		for b in range(len(bboxes)):
+			multiTracker.add(tracker_objects[b],frame,bboxes[b])
+			(success,boundingBox)=multiTracker.update(frame)
+			for i,newbox in enumerate(boundingBox):
+				cv2.rectangle(frame,(int(newbox[0]),int(newbox[1])),
+				(int(newbox[0]+newbox[2]),int(newbox[1]+newbox[3])),(127,255,0),2)
+
+		if cv2.waitKey(1) & 0xFF==ord("x"):
+			break
 	
-	if ret==False:
-		print("ERROR")
-		sys.exit()
+		#cv2.imshow("MultiTracker",frame)
+		r,buffer=cv2.imencode('.jpg',frame)
+		frame=buffer.tobytes()
+		yield (
+		b'--frame\r\n'
+		b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+		) #concat frame one by one and show the result
+		# fps.update()
 
-	if cv2.waitKey(1) & 0xFF==ord("s"):
-		while True:		
-			bbox=cv2.selectROI("MultiTracker",frame,fromCenter=False,
-			showCrosshair=False)
-			tracker=OPENCV_OBJECT_TRACKERS[tracker_inp]()
-			tracker_objects.append(tracker)
-			bboxes.append(bbox)
-			print("bboxes"+str(bboxes))
-			print("Press q to quit selecting boxes and start tracking.")
-			#if cv2.waitKey(1) & 0xFF==ord("b")
-			if cv2.waitKey(0) & 0xFF==ord("q"):
-				print("INSIDE IF CONDITION")
-				break
-
-	for b in range(len(bboxes)):
-		multiTracker.add(tracker_objects[b],frame,bboxes[b])
-		(success,boundingBox)=multiTracker.update(frame)
-		for i,newbox in enumerate(boundingBox):
-			cv2.rectangle(frame,(int(newbox[0]),int(newbox[1])),
-			(int(newbox[0]+newbox[2]),int(newbox[1]+newbox[3])),(127,255,0),2)
 		
-	cv2.imshow("MultiTracker",frame)
-	fps.update()
-	if cv2.waitKey(1) & 0xFF==ord("x"):
-		break
 
-	fps.stop()
-print(f"ELAPSED TIME {fps.elapsed()}")
-print(f"APPROX FPS {fps.fps()}")
+	# video_stream.release()
+	# cv2.destroyAllWindows()
+
+'''Define app route for video feed, returns the streaming response (images)
+The URL to this route us in the "src" attribute of the image tag'''
+@app.route('/video_feed')
+def video_feed():
+	return Response(gen_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
+
+	# fps.stop()
+# print(f"ELAPSED TIME {fps.elapsed()}")
+# print(f"APPROX FPS {fps.fps()}")
 print(f"The cpu usage is:{psutil.cpu_percent(4)}")
 print(f"ACTIVE THREADS: {threading.enumerate()}")
-video_stream.release()
-cv2.destroyAllWindows()
+
 		
 		
