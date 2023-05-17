@@ -5,9 +5,10 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Video Stream Pi</title>
+  <script href="{{ url_for('static', filename= 'video_stream.js') }}"></script>
 </head>
 <body>
   <h1>Video Stream</h1>
-  <img src="{{ url_for('video_feed') }}" width="100%">
+  <img src="{{ url_for('video_feed') }}" width="100%" alt="video_feed" id="video_feed">
 </body>
 </html>
