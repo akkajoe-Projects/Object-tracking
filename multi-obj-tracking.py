@@ -4,9 +4,10 @@ import sys
 from imutils.video import FPS
 import psutil
 import threading
-from flask import Flask,render_template,Response
+from flask import Flask,render_template,Response,request
+from logging import FileHandler,WARNING
 
-# dict containing different Tracker types
+#dict containing different Tracker types
 OPENCV_OBJECT_TRACKERS={
 	"csrt":cv2.legacy.TrackerCSRT_create,
 	"kcf":cv2.legacy.TrackerKCF_create,
@@ -28,6 +29,8 @@ tracker_objects=[]
 # fps=FPS().start()
 
 app = Flask(__name__,template_folder='templates')
+file_handler= FileHandler('errorlog.txt')
+file_handler.setLevel(WARNING)
 
 @app.route('/')
 def index():
@@ -38,6 +41,7 @@ gen_frames() enters a loop which continuously returns frames as response chunks
 '''
 def gen_frames():
 	video_stream=cv2.VideoCapture(0)
+	print("CAP",video_stream.isOpened())
 	while True:
 		ret,frame=video_stream.read()
 		if ret==False:
@@ -92,6 +96,12 @@ The URL to this route us in the "src" attribute of the image tag'''
 def video_feed():
 	return Response(gen_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
+#endpoint for POST request
+@app.route('/initbb',methods=['POST'])
+def initbb():
+	data= request.get_json()
+	print('DATA',data)
+	return 'data acquired hehe'
 	# fps.stop()
 # print(f"ELAPSED TIME {fps.elapsed()}")
 # print(f"APPROX FPS {fps.fps()}")
