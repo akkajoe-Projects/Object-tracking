@@ -6,9 +6,10 @@ function opencvCheck() {
     var ctx= canvas.getContext('2d')
     ctx.strokeStyle="green"
     ctx.lineWidth=2
+    
 
     function refreshCanvas(x1=10,x2=30,x3=40,x4=40) {
-        ctx.drawImage(video, 0, 0)
+        ctx.drawImage(video, 0, 0, 1000, 700)
     }
 
     //displays the mjpeg after an interval of 10ms
@@ -62,8 +63,7 @@ function opencvCheck() {
             //draw a new rect from the start position to current mouse position
             console.log(startX,startY,width,height)
             sendData(startX,startY,width,height)
-    }
-       
+        } 
     })
 
     function sendData(x1,x2,y1,y2){
@@ -87,5 +87,17 @@ function opencvCheck() {
         .catch((err) => console.error(err))
 
     }
+
+    async function getRectCoords(){
+        const response = await fetch('/initcoords')
+        const responseJson = response.json()
+        console.log('BLOB',responseJson)
+
+    }
+
+    getRectCoords().catch(error => {
+        console.error(error)
+    })
 }
+
 
