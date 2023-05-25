@@ -4,30 +4,29 @@ function opencvCheck() {
     let cap=cv.imread(video)
     const canvas = document.getElementById("canvas")
     var ctx= canvas.getContext('2d')
-    ctx.strokeStyle="green"
-    ctx.lineWidth=2
-    
 
     function refreshCanvas(x1=10,x2=30,x3=40,x4=40) {
         ctx.drawImage(video, 0, 0, 1000, 700)
     }
 
     //displays the mjpeg after an interval of 10ms
-    window.setInterval(refreshCanvas, 10)  
+    window.setInterval(refreshCanvas, 50)  
+
     //calculate where the canvas in on the window
     //getBoundingClientReact() returns a DOMrect object providing info about the size of the element and its position relative to the viewport
     var canvasOffset = canvas.getBoundingClientRect()
     var offsetX= canvasOffset.left
     var offsetY= canvasOffset.top
+
     //to hold the mouse position
     var startX
     var startY
     var mouseX
     var mouseY
-    var isDown= false
     var width
     var height
-    console.log("WIDTH TYPE" + typeof(width))
+    var isDown= false
+
     canvas.addEventListener('mousedown', (e) => {
         //preventDefault tells the user agent(web,browser) if the event is not explicitly handled, default action should not be taken
         e.preventDefault()
@@ -51,53 +50,50 @@ function opencvCheck() {
     })
     canvas.addEventListener('mousemove',(e)=>{
         e.preventDefault()
-        e.stopPropagation()
-        
+        e.stopPropagation()      
         if (isDown) { mouseX= parseInt(e.clientX-offsetX)
-            mouseY= parseInt(e.clientY-offsetY)
-    
-            // ctx.clearRect(0,0,canvas.width,canvas.height)
-    
+            mouseY= parseInt(e.clientY-offsetY)  
+            // ctx.clearRect(0,0,canvas.width,canvas.height)   
             width= mouseX - startX
             height= mouseY - startY
-            //draw a new rect from the start position to current mouse position
-            console.log(startX,startY,width,height)
             sendData(startX,startY,width,height)
         } 
     })
-
     function sendData(x1,x2,y1,y2){
        let data = {
-        "x":x1,
-        "y":y1,
-        "width":x2,
-        "height":y2
+        x:x1,
+        y:y1,
+        width:x2,
+        height:y2
        }
         fetch('/initbb',{
         "method": "POST",
-        "headers": {"Content-Type": "application/json"},
+        "headers": {"Content-Type": "application/json; charset=UTF-8"},
         "body": JSON.stringify(data)
-        }).then(response=> {
-            if(response.ok){
-                return response.json()
+        }).then(res=> {
+            if(res.ok){
+                return res.json()
             }else{
                 alert('smething is wrong')
             }
         }).then(json => {console.log(json)})
         .catch((err) => console.error(err))
+    }   
 
+    function drawRect(){
+        ctx.strokeStyle="green"
+        ctx.lineWidth=2
+        ctx.strokeRect(startX,startY,width,height)
     }
-
-    async function getRectCoords(){
-        const response = await fetch('/initcoords')
-        const responseJson = response.json()
-        console.log('BLOB',responseJson)
-
-    }
-
-    getRectCoords().catch(error => {
-        console.error(error)
-    })
+    setInterval(drawRect,50)
+    // async function getRectCoords(){
+    //     let response = await fetch('/initcoords')
+    //     let json_response= response.json()
+    //     console.log('OUTPUT',json_response)
+    // }
+    // setInterval(getRectCoords,100)
+    
 }
+
 
 

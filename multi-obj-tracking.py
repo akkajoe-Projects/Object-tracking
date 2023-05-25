@@ -4,7 +4,7 @@ import sys
 from imutils.video import FPS
 import psutil
 import threading
-from flask import Flask,render_template,Response,request,redirect,url_for,jsonify
+from flask import Flask,render_template,Response,request,redirect,url_for,jsonify,session
 from logging import FileHandler,WARNING
 
 #dict containing different Tracker types
@@ -32,6 +32,8 @@ data_list=[]
 app = Flask(__name__,template_folder='templates')
 file_handler= FileHandler('errorlog.txt')
 file_handler.setLevel(WARNING)
+app.secret_key= 'super secret key'
+app.config['SESSION_TYPE']= 'filesystem'
 
 @app.route('/')
 def index():
@@ -86,9 +88,7 @@ def gen_frames():
 		b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
 		) #concat frame one by one and show the result
 		# fps.update()
-
 		
-
 	# video_stream.release()
 	# cv2.destroyAllWindows()
 
@@ -105,17 +105,22 @@ def initbb():
 	print('DATA',data)
 	global data_list
 	data_list=[i for i in data.values()]
-	return redirect(url_for('initcoords',data_list=data_list))
-
-
-@app.route('/initcoords')
-def initcoords():
-	initcoords= {"x":data_list[0],"y":data_list[1],"width":data_list[2],"height":data_list[3]}
-	#jsonify() converts the data to JSON format and send it as a response
-	return jsonify(initcoords)
+	session['data_list']= data_list
+	# return redirect(url_for('initcoords'))
+	return data
+# @app.route('/initcoords')
+# def initcoords():
+# 	data_list= session.get('data_list')
+# 	initcoords= {"x":data_list[0],"y":data_list[1],"width":data_list[2],"height":data_list[3]}
+# 	response= jsonify(initcoords)
+# 	#jsonify() converts the data to JSON format and send it as a response
+# 	return response
 
 	# fps.stop()
-# print(f"ELAPSED TIME {fps.elapsed()}")
+# print(f"ELAPSED TIME {fps.elapsed()}")s
 # print(f"APPROX FPS {fps.fps()}")
 print(f"The cpu usage is:{psutil.cpu_percent(4)}")
 print(f"ACTIVE THREADS: {threading.enumerate()}")
+
+		
+		
