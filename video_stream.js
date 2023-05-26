@@ -9,7 +9,6 @@ function opencvCheck() {
     function refreshCanvas() {
         ctx.drawImage(video, 0, 0, 720, 640)
     }
-
     //displays the mjpeg after an interval of 10ms
     window.setInterval(refreshCanvas, 50)  
 
@@ -22,16 +21,13 @@ function opencvCheck() {
     var height
     var isDown= false
 
-        // using pageX instead of clientX because of scroll offset
-        $("canvas").on("mousedown", function(event) {
-            startX = event.pageX - this.offsetLeft;
-            startY = event.pageY - this.offsetTop;
-            coords.innerHTML= `x val is ${startX} and y val is ${startY}`
-            isDown= true
-            });      
-    canvas.addEventListener('mouseup',(e)=>{
-        isDown= false
-    })
+    // using pageX instead of clientX because of scroll offset
+    $("canvas").on("mousedown", function(event) {
+        startX = event.pageX - this.offsetLeft;
+        startY = event.pageY - this.offsetTop;
+        coords.innerHTML= `x val is ${startX} and y val is ${startY}`
+        isDown= true
+    });  
     //mouseout refers to when the mouse moves out of an element
     canvas.addEventListener('mouseout',(e)=>{
         isDown= false
@@ -42,14 +38,16 @@ function opencvCheck() {
         mouseY = event.pageY - this.offsetTop;
         width= mouseX-startX
         height=mouseY-startY
-        sendData(startX,startY,width,height)
     }});
+    canvas.addEventListener('mouseup',(e)=>{
+        isDown= false
+        sendData(startX,startY,width,height)
+    })
 
     function drawRect(){
         ctx.strokeStyle="green"
         ctx.lineWidth=2
         ctx.strokeRect(startX,startY,width,height)
-        console.log(`OFFSETS ${startX}, ${startY}`)
     }
     setInterval(drawRect,50)
 
@@ -80,6 +78,4 @@ function opencvCheck() {
     // }
     // setInterval(getRectCoords,100)
 }
-
-
 
