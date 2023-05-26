@@ -47,7 +47,7 @@ def gen_frames():
 	print("CAP",video_stream.isOpened())
 	while True:
 		ret,frame=video_stream.read()
-		frame= imutils.resize(frame, width=1000, height=700)
+		frame= imutils.resize(frame, width=720, height=640)
 		if ret==False:
 			print("ERROR")
 			sys.exit()
@@ -124,3 +124,4 @@ print(f"ACTIVE THREADS: {threading.enumerate()}")
 
 		
 		
+

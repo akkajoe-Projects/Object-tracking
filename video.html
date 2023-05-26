@@ -10,9 +10,12 @@
 <body>
   <h1>Video Stream</h1>
   <h2 id="checker">OpenCV is loading.....</h2>
+  <h2 id="coords">Coords</h2>
+  <!-- <script type="text/javascript">window.data_list= "{{data_list}}"</script> -->
   <script src="/static/video_stream.js" charset="utf-8"></script>
   <script async src="/static/opencv.js" onload="opencvCheck();" charset="utf-8" type="text/javascript"></script>
+  <script src="/static/jquery.js" charset="utf-8"></script>
   <img src="{{ url_for('video_feed') }}" alt="video_feed" id="video_feed" width="100%" hidden>
-  <canvas id="canvas"></canvas>
+  <canvas id="canvas" width="720px" height="640px"></canvas>
 </body>
 </html>
