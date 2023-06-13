@@ -6,6 +6,7 @@ import psutil
 import threading
 from flask import Flask,render_template,Response,request,redirect,url_for,jsonify,session
 from logging import FileHandler,WARNING
+import numpy as np
 
 #dict containing different Tracker types
 OPENCV_OBJECT_TRACKERS={
@@ -27,6 +28,7 @@ multiTracker=cv2.legacy.MultiTracker_create()
 bboxes=[]
 tracker_objects=[]
 data_list=[]
+selected=False
 # fps=FPS().start()
 
 app = Flask(__name__,template_folder='templates')
@@ -37,20 +39,43 @@ app.config['SESSION_TYPE']= 'filesystem'
 
 @app.route('/')
 def index():
-	return render_template('video.html')
+	return render_template('video.html', selected=selected)
 
 '''
 gen_frames() enters a loop which continuously returns frames as response chunks
 '''
 def gen_frames():
+	global frame
 	video_stream=cv2.VideoCapture(0)
 	print("CAP",video_stream.isOpened())
 	while True:
 		ret,frame=video_stream.read()
 		frame= imutils.resize(frame, width=720, height=640)
-		if ret==False:
-			print("ERROR")
-			sys.exit()
+		if not selected:
+			r,buffer=cv2.imencode('.jpg',frame)
+			frame=buffer.tobytes()
+			yield (
+			b'--frame_bytes\r\n'
+			b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+			) #concat frame one by one and show the result
+		else:
+			tracker= OPENCV_OBJECT_TRACKERS[tracker_inp]()
+			multiTracker.add(tracker,frame,(data_list[0],data_list[1],data_list[2],data_list[3]))
+			(success,boundingBox)=multiTracker.update(frame)
+			for i,newbox in enumerate(boundingBox):
+				cv2.rectangle(frame,(int(newbox[0]),int(newbox[1])),
+				(int(newbox[0]+newbox[2]),int(newbox[1]+newbox[3])),(127,255,0),2)
+			r,buffer=cv2.imencode('.jpg',frame)
+			frame=buffer.tobytes()
+			yield (b'--frame_bytes\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+
+
+
+			# if ret==False:
+			# 	print("ERROR")
+			# 	sys.exit()
 		#resize the frame to process it faster
 		# frame=imutils.resize(frame,width=450)
 		# frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
@@ -79,35 +104,25 @@ def gen_frames():
 
 		# if cv2.waitKey(1) & 0xFF==ord("x"):
 		# 	break
-	
 		#cv2.imshow("MultiTracker",frame)
-		r,buffer=cv2.imencode('.jpg',frame)
-		frame=buffer.tobytes()
-		yield (
-		b'--frame\r\n'
-		b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
-		) #concat frame one by one and show the result
-		# fps.update()
+
+
 		
 	# video_stream.release()
 	# cv2.destroyAllWindows()
 
-'''Define app route for video feed, returns the streaming response (images)
-The URL to this route is in the "src" attribute of the image tag'''
-@app.route('/video_feed')
-def video_feed():
-	return Response(gen_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
-
-#endpoint for POST request
 @app.route('/initbb',methods=['POST'])
 def initbb():
+	global selected
+	selected=True
 	data= request.get_json()
 	print('DATA',data)
 	global data_list
 	data_list=[i for i in data.values()]
 	session['data_list']= data_list
-	# return redirect(url_for('initcoords'))
 	return data
+#endpoint for POST request
+
 # @app.route('/initcoords')
 # def initcoords():
 # 	data_list= session.get('data_list')
@@ -119,9 +134,22 @@ def initbb():
 	# fps.stop()
 # print(f"ELAPSED TIME {fps.elapsed()}")s
 # print(f"APPROX FPS {fps.fps()}")
+
+'''Define app route for video feed, returns the streaming response (images)
+The URL to this route is in the "src" attribute of the image tag'''
+@app.route('/video_feed')
+def video_feed():
+	if selected==False:
+		return Response(gen_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
+	else:
+		return Response(gen_fresh_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
+		
+
+
+
+
 print(f"The cpu usage is:{psutil.cpu_percent(4)}")
 print(f"ACTIVE THREADS: {threading.enumerate()}")
 
 		
 		
-

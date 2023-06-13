@@ -78,4 +78,3 @@ function opencvCheck() {
     // }
     // setInterval(getRectCoords,100)
 }
-
