@@ -1,7 +1,7 @@
 function opencvCheck() {
     document.getElementById('checker').innerHTML="OpenCV is ready!"
     const video = document.getElementById("video_feed")
-    let cap=cv.imread(video)
+    // let cap=cv.imread(video)
     const canvas = document.getElementById("canvas")
     var ctx= canvas.getContext('2d')
     coords= document.getElementById("coords")

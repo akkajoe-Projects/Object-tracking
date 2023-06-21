@@ -83,9 +83,5 @@ The URL to this route is in the "src" attribute of the image tag
 '''
 @app.route('/video_feed')
 def video_feed():
-	if selected==False:
-		return Response(gen_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
-	else:
-		return Response(gen_fresh_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
-		
+	return Response(gen_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
 		
