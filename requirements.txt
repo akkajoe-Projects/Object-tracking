@@ -1,0 +1,7 @@
+numpy                 1.24.3
+opencv-contrib-python 4.6.0.66
+pip                   20.0.2
+pkg-resources         0.0.0
+setuptools            44.0.0
+Flask 2.3.2
+imutils in /usr/local/lib/python3.8/dist-packages (0.5.4)
