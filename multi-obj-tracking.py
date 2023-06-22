@@ -1,8 +1,8 @@
 import cv2
 import imutils
-# import sys
-# import psutil
-# import threading
+import sys
+import psutil
+import threading
 from flask import Flask,render_template,Response,request,redirect,url_for,jsonify,session
 from logging import FileHandler,WARNING
 
@@ -27,6 +27,8 @@ bboxes=[]
 tracker_objects=[]
 data_list=[]
 selected=False
+only_once = False
+tracker_count=0
 # fps=FPS().start()
 
 app = Flask(__name__,template_folder='templates')
@@ -44,6 +46,7 @@ gen_frames() enters a loop which continuously returns frames as response chunks
 '''
 def gen_frames():
 	global frame
+	global tracker_count
 	video_stream=cv2.VideoCapture(0)
 	print("CAP",video_stream.isOpened())
 	while True:
@@ -57,20 +60,26 @@ def gen_frames():
 			b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
 			) #concat frame one by one and show the result
 		else:
-			tracker= OPENCV_OBJECT_TRACKERS[tracker_inp]()
-			multiTracker.add(tracker,frame,(data_list[0],data_list[1],data_list[2],data_list[3]))
-			(success,boundingBox)=multiTracker.update(frame)
-			for i,newbox in enumerate(boundingBox):
-				cv2.rectangle(frame,(int(newbox[0]),int(newbox[1])),
-				(int(newbox[0]+newbox[2]),int(newbox[1]+newbox[3])),(127,255,0),2)
-			r,buffer=cv2.imencode('.jpg',frame)
-			frame=buffer.tobytes()
-			yield (b'--frame_bytes\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+			if tracker_count==1:
+				tracker= OPENCV_OBJECT_TRACKERS[tracker_inp]()
+				multiTracker.add(tracker,frame,(data_list[0],data_list[1],data_list[2],data_list[3]))
+				tracker_count=0
+			else:
+				(success,boundingBox)=multiTracker.update(frame)
+				for i,newbox in enumerate(boundingBox):
+					cv2.rectangle(frame,(int(newbox[0]),int(newbox[1])),
+					(int(newbox[0]+newbox[2]),int(newbox[1]+newbox[3])),(127,255,0),2)
+				r,buffer=cv2.imencode('.jpg',frame)
+				frame=buffer.tobytes()
+				yield (b'--frame_bytes\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
 
 @app.route('/initbb',methods=['POST'])
 def initbb():
 	global selected
+	global tracker_count
 	selected=True
+	tracker_count=1
 	data= request.get_json()
 	print('DATA',data)
 	global data_list
@@ -84,4 +93,5 @@ The URL to this route is in the "src" attribute of the image tag
 @app.route('/video_feed')
 def video_feed():
 	return Response(gen_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
+		
 		
