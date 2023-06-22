@@ -51,7 +51,7 @@ def gen_frames():
 	print("CAP",video_stream.isOpened())
 	while True:
 		ret,frame=video_stream.read()
-		frame= imutils.resize(frame, width=720, height=640)
+		frame= cv2.resize(frame, (720,640))
 		if not selected:
 			r,buffer=cv2.imencode('.jpg',frame)
 			frame=buffer.tobytes()
