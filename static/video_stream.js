@@ -19,6 +19,7 @@ function opencvCheck() {
     var width
     var height
     var isDown= false
+    var mouseUp
 
     // using pageX instead of clientX because of scroll offset
     $("canvas").on("mousedown", function(event) {
@@ -26,10 +27,12 @@ function opencvCheck() {
         startY = event.pageY - this.offsetTop;
         coords.innerHTML= `x val is ${startX} and y val is ${startY}`
         isDown= true
+        mouseUp= false
     });  
     //mouseout refers to when the mouse moves out of an element
     canvas.addEventListener('mouseout',(e)=>{
         isDown= false
+        mouseUp= false
     })
     $("canvas").on("mousemove", function(event) {
         if (isDown) {
@@ -37,16 +40,20 @@ function opencvCheck() {
         mouseY = event.pageY - this.offsetTop;
         width= mouseX-startX
         height=mouseY-startY
+        mouseUp= false
     }});
     canvas.addEventListener('mouseup',(e)=>{
         isDown= false
+        mouseUp=true
         sendData(startX,startY,width,height)
     })
 
     function drawRect(){
-        ctx.strokeStyle="green"
-        ctx.lineWidth=2
-        ctx.strokeRect(startX,startY,width,height)
+        if (!mouseUp){
+            ctx.strokeStyle="green"
+            ctx.lineWidth=2
+            ctx.strokeRect(startX,startY,width,height)
+        }       
     }
     setInterval(drawRect,50)
 
@@ -70,10 +77,4 @@ function opencvCheck() {
         }).then(json => {console.log(json)})
         .catch((err) => console.error(err))
     }   
-    // async function getRectCoords(){
-    //     let response = await fetch('/initcoords')
-    //     let json_response= response.json()
-    //     console.log('OUTPUT',json_response)
-    // }
-    // setInterval(getRectCoords,100)
 }
