@@ -1,6 +1,6 @@
 function opencvCheck() {
     document.getElementById('checker').innerHTML="OpenCV is ready!"
-    const video = document.getElementById("video_feed")
+    var video = document.getElementById("video_feed")
     const canvas = document.getElementById("canvas")
     var ctx= canvas.getContext('2d')
     coords= document.getElementById("coords")
@@ -27,12 +27,12 @@ function opencvCheck() {
         startY = event.pageY - this.offsetTop;
         coords.innerHTML= `x val is ${startX} and y val is ${startY}`
         isDown= true
-        mouseUp= false
+        mouseUp= true
     });  
     //mouseout refers to when the mouse moves out of an element
     canvas.addEventListener('mouseout',(e)=>{
         isDown= false
-        mouseUp= false
+        mouseUp= true
     })
     $("canvas").on("mousemove", function(event) {
         if (isDown) {
