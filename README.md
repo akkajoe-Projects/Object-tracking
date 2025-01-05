@@ -12,7 +12,7 @@ Please view the single-obj branch for single object tracking.
 Install the required dependencies using the following command:
 ```bash
 pip install -r requirements.txt
-``
+```
 
 ### Deployment instructions
 To run the Flask server, use the following command:
@@ -30,14 +30,6 @@ To run the multi-object tracking application with threading, use the following c
 python multi-tracking-wthread.py
 ```
 
-## Contribution guidelines
-- **Writing tests**: Ensure all new features are covered by unit tests.
-- **Code review**: Submit pull requests for code review before merging.
-- **Other guidelines**: Follow PEP 8 coding standards.
-
-## Who do I talk to?
-- **Repo owner or admin**
-- **Other community or team contact**
 
 ## Additional Information
 - The `static` directory contains static files such as JavaScript and CSS.
